@@ -1,3 +1,4 @@
+The `etcd` exposes the storage service via API interfaces hence the encryption of the data in transit shall be required. 
 
 #### Step 1 - Install utilities
 ```sh

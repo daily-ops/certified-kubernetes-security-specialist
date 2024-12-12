@@ -1,3 +1,5 @@
+As for the concern with confidentiality of data in transit between components in Kubernetes cluster. We starts off with setting up CA in which effectively will be used for signing certificates for all the components participating in this cluster to protect data in transit against MITM attack.
+
 #### Step 1 - Creating a private key for Certificate Authority:
 ```sh
 mkdir /root/certificates

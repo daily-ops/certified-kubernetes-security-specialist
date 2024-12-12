@@ -1,3 +1,5 @@
+The `etcd` is a very foundation component of a Kubernetes cluster acting as a distributed storage for persistent data of the cluster. 
+
 #### Documentation Link:
 
 https://github.com/etcd-io/etcd/releases/tag/v3.5.4

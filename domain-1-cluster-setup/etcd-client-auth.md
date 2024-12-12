@@ -43,6 +43,10 @@ root@kubernetes:~/certificates# ETCDCTL_API=3 etcdctl --endpoints=https://127.0.
 Error: context deadline exceeded
 root@kubernetes:~/certificates# 
 ```
+The error due to the missing client certificate is highly visible on the server side.
+```
+{"level":"warn","ts":"2024-12-12T21:12:28.693Z","caller":"embed/config_logging.go:169","msg":"rejected connection","remote-addr":"127.0.0.1:45942","server-name":"","error":"tls: client didn't provide a certificate"}
+```
 The `etcd` service is accessible with the generated client certificate as the identity.
 ```sh
 root@kubernetes:~/certificates# ETCDCTL_API=3 etcdctl --endpoints=https://127.0.0.1:2379 --insecure-skip-tls-verify  --insecure-transport=false --cert /root/certificates/client.crt --key /root/certificates/client.key put testclient data

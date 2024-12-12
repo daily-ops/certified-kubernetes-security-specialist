@@ -1,3 +1,5 @@
+Imagine we require passport with photo and fingerprints to identify ourselves when entering or exiting a country, similarly, in order to consume APIs offered by `etcd`, it should require a mechanism to identify the client who is coming in to consume and retrieve data stored in etcd to protect and allow only known and trusted clients with the valid identity document issued by Kubernetes cluster therefore a client certificate is required to interact with `etcd`.
+
 #### Step 1 - Generate Client Certificate and Client Key:
 ```sh
 cd /root/certificates

@@ -27,3 +27,14 @@ systemctl restart kube-apiserver
 ```sh
 kubectl get secret --server=https://127.0.0.1:6443 --client-certificate /root/certificates/alice.crt --certificate-authority /root/certificates/ca.crt --client-key /root/certificates/alice.key
 ```
+Successfully authenticated.
+```
+root@kubernetes:~/certificates# kubectl get secret --server=https://127.0.0.1:6443 --client-certificate /root/certificates/alice.crt --certificate-authority /root/certificates/ca.crt --client-key /root/certificates/alice.key
+No resources found in default namespace.
+root@kubernetes:~/certificates# 
+```
+Without the certificate, it prompts for username.
+```
+root@kubernetes:~/certificates#kubectl get secret --server=https://127.0.0.1:6443 
+Please enter Username: 
+```

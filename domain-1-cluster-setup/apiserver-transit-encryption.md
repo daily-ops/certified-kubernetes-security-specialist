@@ -1,3 +1,4 @@
+Similarly to `etcd`, the API server requires a certificate to secure the communication transmitting data in and out. The certicate generated in previous step was incomplete due 
 
 #### Step 1 - Verify Certificate Details
 ```sh

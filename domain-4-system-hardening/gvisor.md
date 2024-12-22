@@ -2,88 +2,95 @@
 
 https://kubernetes.io/docs/concepts/containers/runtime-class/
 
-#### Step 1 - Configure Docker:
+#### Step 1 - Download and install runsc and its shim from repository on each node:
 ```sh
-sudo apt-get install apt-transport-https ca-certificates curl gnupg-agent software-properties-common
-sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
-sudo apt-get update
-sudo apt-get install docker-ce docker-ce-cli containerd.io
+(
+  set -e
+  ARCH=$(uname -m)
+  URL=https://storage.googleapis.com/gvisor/releases/release/latest/${ARCH}
+  wget ${URL}/runsc ${URL}/runsc.sha512 \
+    ${URL}/containerd-shim-runsc-v1 ${URL}/containerd-shim-runsc-v1.sha512
+  sha512sum -c runsc.sha512 \
+    -c containerd-shim-runsc-v1.sha512
+  rm -f *.sha512
+  chmod a+rx runsc containerd-shim-runsc-v1
+  sudo mv runsc containerd-shim-runsc-v1 /usr/local/bin
+)
 ```
-#### Step 2 - Install Configure Minikube:
-```sh
-wget https://github.com/kubernetes/minikube/releases/download/v1.16.0/minikube-linux-amd64
-mv minikube-linux-amd64 minikube
-chmod +x minikube
-sudo mv ./minikube /usr/local/bin/minikube
-```
-```sh
-curl -LO https://storage.googleapis.com/kubernetes-release/release/`curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt`/bin/linux/amd64/kubectl
-sudo mv kubectl /usr/local/bin
-chmod +x /usr/local/bin/kubectl
-```
-```sh
-sudo usermod -aG docker ubuntu
-```
-logout and login
 
-####  Step 3 Start Minikube:
+#### Step 2 - Configure containerd on each worker node
 ```sh
-minikube start --container-runtime=containerd  --docker-opt containerd=/var/run/containerd/containerd.sock
+cat <<EOF | sudo tee /etc/containerd/config.toml
+version = 2
+[plugins."io.containerd.runtime.v1.linux"]
+  shim_debug = true
+[plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc]
+  runtime_type = "io.containerd.runc.v2"
+[plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runsc]
+  runtime_type = "io.containerd.runsc.v1"
+EOF
+systemctl restart containerd
 ```
-####  Step 4 Enable gVisor addon:
+
+####  Step 2 - Adding gVisor runtime class:
 ```sh
-minikube addons list
-minikube addons enable gvisor
-minikube addons list
-```
-####  Step 5 - Explore gVisor:
-```sh
-kubectl get runtimeclass
-```
-```sh
-nano runtimeclass.yaml
-```
-```sh
+kubectl apply -f - <<EOF
 apiVersion: node.k8s.io/v1
 kind: RuntimeClass
 metadata:
-  name: gvisor2
+  name: gvisor
 handler: runsc
+EOF
 ```
+
+#### Step 3 - Create pod with gvisor as runtime class
 ```sh
-kubectl apply -f runtimeclass.yaml
-```
-```sh
-nano gvisor-pod.yaml
-```
-```sh
+kubectl apply -f - <<EOF
 apiVersion: v1
 kind: Pod
 metadata:
-  name: nginx
+  name: nginx-gvisor
 spec:
-  runtimeClassName: gvisor2
+  runtimeClassName: gvisor
   containers:
   - image: nginx
     name: nginx
-```
-```sh
-kubectl apply -f gvisor-pod.yaml
+EOF
 ```
 
-#### Create one more pod for seeing the difference in dmesg output:
+#### Step 4 - Create one more pod for seeing the difference in dmesg output:
 ```sh
 kubectl run nginx-default --image=nginx
 ```
 
-#### Verify dmesg output
+#### Step 5 - Verify dmesg output
 ```sh
-kubectl exec -it nginx -- bash
+kubectl exec -it nginx-gvisor -- bash
 dmesg
-logout
+exit
 ```
+<details>
+<summary>Output</summary>
+
+```sh
+root@nginx-gvisor:/# dmesg
+[    0.000000] Starting gVisor...
+[    0.115907] Adversarially training Redcode AI...
+[    0.240274] Accelerating teletypewriter to 9600 baud...
+[    0.729529] Singleplexing /dev/ptmx...
+[    1.137703] Verifying that no non-zero bytes made their way into /dev/zero...
+```
+</details>
+
 ```sh
 kubectl exec -it nginx-default -- bash
-dmesg
 ```
+
+<details>
+<summary>Output</summary>
+
+```
+root@nginx-default:/# dmesg
+dmesg: read kernel buffer failed: Operation not permitted
+```
+</details>

@@ -31,3 +31,22 @@ kubectl cluster-info (from outside of Pod)
 
 curl -k -H "Authorization: Bearer $token" https://control-plane-url-here/api/v1
 ```
+
+```
+TOKEN=`kubectl exec -it nginx -- cat /var/run/secrets/kubernetes.io/serviceaccount/token`
+~/cks-tf/apps$ curl -k -H "Authorization: Bearer $TOKEN" https://XXXXXXXXX:6443/api/v1 | head
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0{
+  "kind": "APIResourceList",
+1  "groupVersion": "v1",
+0  "resources": [
+0    {
+       "name": "bindings",
+1      "singularName": "binding",
+0      "namespaced": true,
+7      "kind": "Binding",
+4      "verbs": [
+2    0 10742    0     0   582k      0 --:--:-- --:--:-- --:--:--  582k
+(23) Failed writing body
+```
